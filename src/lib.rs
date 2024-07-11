@@ -201,8 +201,8 @@ impl Plugin for ImguiPlugin {
     fn finish(&self, app: &mut App) {
         let display_scale = {
             let mut system_state: SystemState<Query<&Window, With<PrimaryWindow>>> =
-                SystemState::new(&mut app.world);
-            let primary_window = system_state.get(&app.world);
+                SystemState::new(&mut app.world_mut());
+            let primary_window = system_state.get(&app.world());
             primary_window.get_single().unwrap().scale_factor()
         };
 
@@ -234,9 +234,9 @@ impl Plugin for ImguiPlugin {
         }
 
         let ctx_rc = match app.get_sub_app_mut(RenderApp) {
-            Ok(render_app) => {
-                let device = render_app.world.resource::<RenderDevice>();
-                let queue = render_app.world.resource::<RenderQueue>();
+            Some(render_app) => {
+                let device = render_app.world().resource::<RenderDevice>();
+                let queue = render_app.world().resource::<RenderQueue>();
 
                 // Here we create a new ImGui renderer with a default format. At this point,
                 // we don't know what format the window surface is going to be set up with,
@@ -253,7 +253,7 @@ impl Plugin for ImguiPlugin {
 
                 render_app.add_render_graph_node::<ImGuiNode>(Core2d, ImGuiNodeLabel);
 
-                render_app.add_render_graph_edges(Core2d, (Node2d::MainPass, ImGuiNodeLabel));
+                render_app.add_render_graph_edges(Core2d, (Node2d::StartMainPass, ImGuiNodeLabel));
 
                 render_app.add_render_graph_edges(
                     Core2d,
